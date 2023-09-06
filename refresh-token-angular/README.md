@@ -58,3 +58,75 @@ De esa manera, `HttpClient estará entonces disponible para inyección en su apl
 
 `provideHttpClient()` es más **"tree-shakable"** que importar HttpClientModule, ya que puede habilitar las funciones que desee dándole algunos parámetros.
 
+## [Functional Interceptors](https://blog.ninja-squad.com/2022/11/09/angular-http-in-standalone-applications/)
+
+En Angular, los interceptores son clases que implementan la interfaz `HttpInterceptor`. Se utilizan para interceptar solicitudes y respuestas HTTP y se pueden usar para agregar encabezados, registrar solicitudes, etc.
+
+````typescript
+@Injectable({providedIn: 'root'})
+export class LoggerInterceptor implements HttpInterceptor {
+  intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+    console.log(`Request is on its way to ${req.url}`);
+    return next.handle(req);
+  }
+}
+````
+
+Desde `Angular v15`, también puedes usar `interceptores funcionales`. Son funciones que toman como parámetros una Http Request y un Http Handler:
+
+````typescript
+export const loggerInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, next: HttpHandlerFn): Observable<HttpEvent<unknown>> => {
+  const logger = inject(Logger);
+  logger.log(`Request is on its way to ${req.url}`);
+  return next(req);
+}
+````
+
+## Creando Interceptor Functional
+
+Como estamos trabajando con Angular 16 crearemos los interceptores usando funciones y ya no con clases como lo hacíamos anteriormente. Para eso solo necesitamos agregar la bandera `--functional` y el CLI creará el interceptor de manera funcional:
+
+````bash
+ng g interceptor commons/interceptors/api --functional --skip-tests
+````
+
+Como resultado tendremos:
+
+````typescript
+import { HttpInterceptorFn } from '@angular/common/http';
+
+export const apiInterceptor: HttpInterceptorFn = (req, next) => {
+  return next(req);
+};
+````
+
+Si vemos el `HttpInterceptorFn` veremos que es un `type` cuya firma corresponde con la función de nuestro interceptor:
+
+````typescript
+export declare type HttpInterceptorFn = (req: HttpRequest<unknown>, next: HttpHandlerFn) => Observable<HttpEvent<unknown>>;
+````
+
+## Registrando Interceptores basado en Funciones
+
+Los interceptores funcionales **deben registrarse** mediante `withInterceptors()`:
+
+````typescript
+import { bootstrapApplication } from '@angular/core';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { AppComponent } from './app.component';
+
+bootstrapApplication(AppComponent, {
+  providers: [provideHttpClient(withInterceptors([loggerInterceptor]))]
+});
+````
+
+Siguiendo con lo desarrollado en este proyecto, nosotros registraremos nuestros interceptores en la clase de configuración `app.config.ts`, es lo mismo que en el ejemplo anterior solo que en nuestro caso lo tenemos separado para mayor orden:
+
+````typescript
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideRouter(APP_ROUTES),
+    provideHttpClient(withInterceptors([apiInterceptor, errorApiInterceptor]))
+  ]
+};
+````
