@@ -10,6 +10,6 @@ import { errorApiInterceptor } from './commons/interceptors/error-api.intercepto
 export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(APP_ROUTES),
-    provideHttpClient(withInterceptors([apiInterceptor, errorApiInterceptor]))
+    provideHttpClient(withInterceptors([apiInterceptor, errorApiInterceptor])) //El orden definido de los interceptores en el array ¡SÍ IMPORTA!, será el orden en el que serán ejecutados.
   ]
 };

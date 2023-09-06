@@ -126,7 +126,16 @@ Siguiendo con lo desarrollado en este proyecto, nosotros registraremos nuestros 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(APP_ROUTES),
-    provideHttpClient(withInterceptors([apiInterceptor, errorApiInterceptor]))
+    provideHttpClient(withInterceptors([apiInterceptor, errorApiInterceptor])) //El orden definido de los interceptores en el array ¡SÍ IMPORTA!, será el orden en el que serán ejecutados.
   ]
 };
 ````
+
+**IMPORTANTE**
+
+> El orden definido en el array de los interceptores `Sí importa`, será el orden en el que serán ejecutados. En nuestro caso tenemos: `provideHttpClient(withInterceptors([apiInterceptor, errorApiInterceptor]))`, lo que significa que primero se ejecutará el interceptor `apiInterceptor` y luego `errorApiInterceptor`.
+
+## Funcionamiento de Http Interceptor
+
+![http interceptor](./src/assets/interceptor.png)
+
