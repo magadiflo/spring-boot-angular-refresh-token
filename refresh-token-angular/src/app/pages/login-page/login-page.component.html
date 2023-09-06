@@ -6,16 +6,16 @@
           Inicio de Sesión
         </div>
         <div class="card-body">
-          <form>
+          <form [formGroup]="form" (ngSubmit)="login()">
             <div class="mb-3">
               <label for="username" class="form-label">Usuario</label>
-              <input type="text" class="form-control" id="username">
+              <input type="text" class="form-control" id="username" formControlName="username">
             </div>
             <div class="mb-3">
               <label for="password" class="form-label">Contraseña</label>
-              <input type="password" class="form-control" id="password">
+              <input type="password" class="form-control" id="password" formControlName="password">
             </div>
-            <button type="button" class="btn btn-primary">Acceder</button>
+            <button type="submit" class="btn btn-primary">Acceder</button>
           </form>
         </div>
       </div>
