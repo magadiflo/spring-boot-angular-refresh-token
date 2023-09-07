@@ -139,3 +139,7 @@ export const appConfig: ApplicationConfig = {
 
 ![http interceptor](./src/assets/interceptor.png)
 
+## Flujo a implementar del Refresh Token
+
+![refresh token](./src/assets/flujo_refresh_token.png)
+
