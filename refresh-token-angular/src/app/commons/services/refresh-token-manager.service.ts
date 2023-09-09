@@ -35,6 +35,9 @@ export class RefreshTokenManagerService {
 
   addTokenHeader(req: HttpRequest<unknown>): HttpRequest<unknown> {
     const user = this.getDataUser();
+    // Este código del URL_AUTH_REFRESH, es del código del tutorial, aquí hace esa comprobación porque el backend que usa
+    // espera recibir el refreshToken en el Header, mientras que en mi caso, lo mando por el body, así que lo dejo
+    // anotado solo para tenerlo en cuenta.
     const token = req.url === URL_AUTH_REFRESH ? user.refreshToken : user.accessToken;
     console.log(`Token asignado en el header: ${token}`);
 

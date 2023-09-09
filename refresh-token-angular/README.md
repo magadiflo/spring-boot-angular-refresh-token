@@ -143,3 +143,50 @@ export const appConfig: ApplicationConfig = {
 
 ![refresh token](./src/assets/flujo_refresh_token.png)
 
+---
+
+# Flujos identificados
+
+**Importante**
+
+> El tutorial solo trabaja con dos interceptores: `apiInterceptor` y el `errorApiInterceptor`, por mi parte agregué un tercer interceptor en este proyecto `loggingInterceptor` con la finalidad de ver la secuencia de ejecución de los mismos, tanto en el `request` como en el `response`.
+
+---
+
+## Login (exitoso)
+
+Este es el flujo feliz, no ocurre ningún error. Vemos que se ejecutan los tres interceptores, según como lo definimos en el archivo `app.config.ts`, esto es para el `request`, mientras que para el `response` vemos que ocurre en el sentido contrario, es decir, la **respuesta del servidor** llega al último interceptor que emitió el `request`, en nuestro caso, al `loggingInterceptor` y así sucesivamente va hacia atrás.
+
+![login exitoso](./src/assets/01.Login-exitoso.png)
+
+## Obteniendo productos (exitoso)
+
+El flujo para obtener los productos es similar al flujo realizado en el login con una diferencia, en este flujo, en el interceptor `apiInterceptor` clonamos el `request` y le asignamos a la cabecera el `accessToken`:
+
+````typescript
+// api.interceptor.ts
+const cloneRequest = refreshTokenManagerService.addTokenHeader(req);
+  return next(cloneRequest)
+    .pipe(
+      tap(apiInterceptorHandlers)
+    );
+````
+
+Aquí observamos cómo es que estamos clonando el request asignándole a la cabecera el `accessToken` que requiere la solicitud para obtener los productos.
+
+````typescript
+// refresh-token-management.service.ts
+
+ addTokenHeader(req: HttpRequest<unknown>): HttpRequest<unknown> {
+    const user = this.getDataUser();
+    const token = req.url === URL_AUTH_REFRESH ? user.refreshToken : user.accessToken; //Ver comentario más extenso en el código fuente
+    console.log(`Token asignado en el header: ${token}`);
+
+    return req.clone({
+      headers: req.headers.set('Authorization', `Bearer ${token}`)
+    });
+  }
+````
+
+![02.obteniendo-productos-exitoso](./src/assets/02.obteniendo-productos-exitoso.png)
+
