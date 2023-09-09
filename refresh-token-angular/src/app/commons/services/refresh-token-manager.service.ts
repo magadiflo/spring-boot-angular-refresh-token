@@ -13,6 +13,7 @@ import { URL_AUTH_REFRESH } from './api/urls-api';
 export class RefreshTokenManagerService {
 
   private _isRefreshing = false;
+  private _unauthorizedCount = 0;
   private _localStorageService = inject(LocalStorageService);
 
 
@@ -20,14 +21,22 @@ export class RefreshTokenManagerService {
     return this._isRefreshing;
   }
 
-
   public set isRefreshing(value: boolean) {
     this._isRefreshing = value;
+  }
+
+  public get unauthorizedCount(): number {
+    return this._unauthorizedCount;
+  }
+
+  public set unauthorizedCount(value: number) {
+    this._unauthorizedCount = value;
   }
 
   addTokenHeader(req: HttpRequest<unknown>): HttpRequest<unknown> {
     const user = this.getDataUser();
     const token = req.url === URL_AUTH_REFRESH ? user.refreshToken : user.accessToken;
+    console.log(`Token asignado en el header: ${token}`);
 
     return req.clone({
       headers: req.headers.set('Authorization', `Bearer ${token}`)

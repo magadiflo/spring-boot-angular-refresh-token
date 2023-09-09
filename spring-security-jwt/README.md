@@ -20,8 +20,8 @@ En el tutorial de **LogiDev** usa su backend en `NestJs`, pero en mi caso usaré
 Para realizar las pruebas del accessToken y refreshToken definiremos el siguiente tiempo de expiración para los mismos:
 
 ````
-EXPIRATION_ACCESS_TOKEN = 5 * 1000;     //Test 5s
-EXPIRATION_REFRESH_TOKEN = 20 * 1000;   //Test 20s
+EXPIRATION_ACCESS_TOKEN  = 10 * 1000;       //Test 10s
+EXPIRATION_REFRESH_TOKEN = 60 * 1000;       //Test 1m
 ````
 
 ### EndPoint Login

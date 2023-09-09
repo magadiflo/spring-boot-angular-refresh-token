@@ -16,7 +16,7 @@ import java.util.UUID;
 @Service
 public class RefreshTokenService {
     private static final Logger LOG = LoggerFactory.getLogger(RefreshTokenService.class);
-    private static final long EXPIRATION_REFRESH_TOKEN = 20 * 1000;//Test 20s
+    private static final long EXPIRATION_REFRESH_TOKEN = 60 * 1000;//Test 1m
     private final IRefreshTokenRepository refreshTokenRepository;
 
     public RefreshTokenService(IRefreshTokenRepository refreshTokenRepository) {

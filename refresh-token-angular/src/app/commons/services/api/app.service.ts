@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, delay, tap } from 'rxjs';
 
 import { IResponseLogin, IResponseProduct, IResponseRefreshToken } from '../app.model.interface';
 import { URL_AUTH_LOGIN, URL_AUTH_REFRESH, URL_PRODUCTS } from './urls-api';
@@ -17,8 +17,15 @@ export class AppService {
     return this._httpClient.post<IResponseLogin>(URL_AUTH_LOGIN, { username, password });
   }
 
+  // El delay es para simular que hay una demora en la respuesta del backend
   refreshToken(refreshToken: string): Observable<IResponseRefreshToken> {
-    return this._httpClient.post<IResponseRefreshToken>(URL_AUTH_REFRESH, { refreshToken });
+    console.log('[POST] /refresh-token');
+    return this._httpClient.post<IResponseRefreshToken>(URL_AUTH_REFRESH, { refreshToken })
+      .pipe(
+        tap(() => console.log('inicio-retardo')),
+        delay(5000),
+        tap(() => console.log('fin-retardo')),
+      );
   }
 
   products(): Observable<IResponseProduct[]> {

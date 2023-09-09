@@ -1,4 +1,5 @@
 import { Component, inject } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { NgFor } from '@angular/common';
 
 import { IResponseProduct } from '../../commons/services/app.model.interface';
@@ -7,7 +8,7 @@ import { AppService } from '../../commons/services/api/app.service';
 @Component({
   selector: 'app-dashboard-page',
   standalone: true,
-  imports: [NgFor],
+  imports: [NgFor, RouterLink],
   templateUrl: './dashboard-page.component.html',
   styleUrls: ['./dashboard-page.component.scss']
 })
