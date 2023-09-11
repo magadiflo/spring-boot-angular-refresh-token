@@ -32,6 +32,7 @@ export const errorApiInterceptor: HttpInterceptorFn = (req, next) => {
 
           return appService.refreshToken(refreshTokenManagerService.getDataUser().refreshToken)
             .pipe(
+              // finalize() se llama cuando la fuente finalice por completo o por error. La función especificada también se llamará cuando el suscriptor se dé de baja explícitamente.
               finalize(() => {
                 refreshTokenManagerService.unauthorizedCount = 0;
                 refreshTokenManagerService.isRefreshing = false;

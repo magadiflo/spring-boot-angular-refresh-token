@@ -275,3 +275,30 @@ El `apiInterceptor` continúa con el `response` hacia atrás, al **origen del re
 **IMPORTANTE**
 
 > Es importante la validación que hacemos del número de veces que ocurre el error `401 Unauthorized` y lanzamos el error con el `return throwError(() => error)`. **¿Qué pasa si omitimos esa validación?**, pues lo que sucederá es que continuará con el flujo y lo que vien a continuación es realizar una `request` hacia el endpoint del `/refresh-token` donde se envia el `refreshToken`, pero sabemos que el `refreshToken` ha caducado, entonces cuando se haga la solicitud el servidor volverá a fallar retornando un error hasta el interceptor `errorApiInterceptor` quien atrapará el error y volverá a realizar la request del `/refresh-token` convirtiéndose en un bucle infinito.
+
+## Realizando request cuando se está haciendo refresh de los tokens
+
+Cuando el `accessToken` ha expirado realizamos una solitud al `/refresh-token` para poder actualizarlo. En ese sentido, veamos el siguiente escenario: qué pasa si el servidor experimenta un retardo y se está demorando en actualizar el token y en ese tiempo de demora el cliente hace una nueva solicitud o varias solicitudes, obviamente, como aún no se ha actualizado el `accessToken` las solicitudes se enviarán con el `accessToken` expirado. Entonces, de alguna manera debemos evitar que se envíen esos request, ya que no tendría sentido enviar un request con un `accessToken` expirado.
+
+![05.request-cuando-esta-haciendo-refresh](./src/assets/05.request-cuando-esta-haciendo-refresh.png)
+
+Recordemos que en el endpoint del `/refresh-token` estoy usando un `delay(5000)` de 5 segundos para simular el retardo en la actualización del `accessToken`. 
+
+Si observamos el código del interceptor `errorApiInterceptor` veremos que luego de verificar que el error es un `401 Unauthorized` utilizamos la variable del servicio establecido en true `refreshTokenManagerService.isRefreshing = true`,
+de tal forma que cuando se haga una nueva `request` mientras se está experimentando la demora, el `request` realizado irá al interceptor `apiInterceptor` donde establecemos la siguiente validación:
+
+````typescript
+if (refreshTokenManagerService.isRefreshing) {
+  console.log('¡¡¡¡...Refresh en proceso, se cancela tu petición...!!!');
+  return EMPTY;
+}
+````
+
+Como vemos, mientras se esté actualizando el `accessToken` cualquier otra solicitud se cancelará, eso lo podemos observar también en la imagen superior donde se hizo  `3 request` siendo estos cancelados.
+
+Una vez finalizado la actualización del `accessToken` en el interceptor `errorApiInterceptor` se ejecutará el operador `finalize()` quien reestablecerá los valores del `unauthorizedCount = 0` y del `isRefreshing = false`.
+
+**NOTA**
+> Se llama al operador `finalize()` de `RxJs` cuando la respuesta del observable devuelve `un error` o `se completa`. 
+>
+> Se llama cuando **la fuente finaliza por completo o por error.** La función especificada también se llamará cuando el suscriptor se dé de baja explícitamente.
