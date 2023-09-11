@@ -159,8 +159,26 @@ return next(req)
 
 El código anterior es muy importante, debido a que los interceptores pueden procesar le `request` y `response` juntos, entones de alguna manera necesitaba ver la respuesta que viene del servidor, para eso usé el operador `tap()` de `RxJs`. Este operador captura si la solicitud se hizo correctamente o falló.
 
+## [Orden de interceptación](https://angular.io/guide/http-intercept-requests-and-responses#interceptor-order)
 
-## Funcionamiento de Http Interceptor
+**Angular aplica interceptores en el orden en que los proporciona.** Por ejemplo, considere una situación en la que desea gestionar la autenticación de sus solicitudes HTTP y registrarlas antes de enviarlas a un servidor. Para realizar esta tarea, puede proporcionar un servicio `AuthInterceptor` y luego un servicio `LoggingInterceptor`. **Los request** salientes `fluirían desde AuthInterceptor hacia LoggingInterceptor`. **Los responses** de estas solicitudes fluirían en la otra dirección, `desde LoggingInterceptor de regreso a AuthInterceptor`. La siguiente es una representación visual del proceso:
+
+![interceptor order](./src/assets/interceptor-order.png)
+
+**DATOS**
+
+> El último interceptor del proceso es siempre el `HttpBackend` que maneja la comunicación con el servidor.
+> 
+> El `HttpBackend` es un `HttpHandler` final que enviará la solicitud a través de las API HTTP del navegador a un servidor.
+>
+> Los **interceptores** se encuentran entre la interfaz `HttpClient` y `HttpBackend`.
+>
+> Cuando se inyecta, `HttpBackend` envía solicitudes directamente al backend, sin pasar por la cadena del interceptor.
+
+
+## Orden de los interceptores de nuestro proyecto
+
+> En este diagrama no está el último interceptor que agregamos `loggingInterceptor`, ya que el diagrama corresponde al tutorial, pero la idea del flujo sería el mismo, eso significa que, según definimos el interceptor `loggingInterceptor` estaría a continuación del interceptor `errorApiInterceptor`
 
 ![http interceptor](./src/assets/interceptor.png)
 
