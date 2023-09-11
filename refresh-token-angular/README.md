@@ -250,3 +250,28 @@ Ahora, como el `refreshToken` es válido, el backend responde con información a
 
 Como ahora el `accessToken` ha sido renovado, el backend nos responderá con los datos esperados, pasando la respuesta por los interceptores `loggingInterceptor`, `errorApiInterceptor` y `apiInterceptor`, finalmente desde el `apiInterceptor` se lanzará la respuesta al "Origen del request".
 
+## Obteniendo productos (accessToken expirado + refreshToken expirado)
+
+Cuando el `accessToken` ha expirado usamos el `refreshToken` para obtener un nuevo `accessToken` válido. Pero en este caso, el `refreshToken` también ha expirado, cuando eso ocurre necesitamos **forzosamente** que el usuario vuelva a iniciar sesión:
+
+![04.obteniendo-productos-accesstoken-y-refreshtoken-expirado](./src/assets/04.obteniendo-productos-accesstoken-y-refreshtoken-expirado.png)
+
+Si observamos la imagen anterior, lo que está encerrado en cuadro amarillo es parte del mismo proceso que describí en el caso anterior **(accessToken expirado + refreshToken válido)** con la diferencia de que en el caso anterior la respuesta obtenida del servidor es `exitosa` mientras que aquí la actualización del `refreshToken` falla.
+
+**La primera vez que falla** es cuando se envía un request con un `accessToken` expirado. Para contabilizar el número de veces que falla utilizamos un contador `refreshTokenManagerService.unauthorizedCount++`, esto es porque nuestro backend retorna un `401 Unauthorized` cuando el accessToken o refreshToken expira. **La segunda vez que falla** es cuando mandamos a refrescar los tokens enviándole un `refreshToken` expirado, eso lo hacemos desde `return appService.refreshToken(refreshTokenManagerService.getDataUser().refreshToken)...`. Entonces, en ese punto, el servidor retorna por segunda vez el **error 401**, primero al interceptor `loggingInterceptor` luego al `errorApiInterceptor` y aquí lo atrapamos usando el operador `catchError`. 
+
+Luego de atrapar el error, ingresamos dentro del `if (error.status === HttpStatusCode.Unauthorized)...`, a continuación nuestro contador aumenta en 2 y luego nos encontramos con la validación que se muestra en el código inferior. Entramos dentro de ese if y lo que hacemos es retornar un `throwError(() => error)` es decir, lanzamos el error al siguiente interceptor, que en este caso sería al `apiInterceptor`. 
+
+````typescript
+if (refreshTokenManagerService.unauthorizedCount == 2) {
+  console.log('unauthorizedCount == 2');
+  return throwError(() => error);
+}
+````
+
+El `apiInterceptor` continúa con el `response` hacia atrás, al **origen del request** que en este caso sería al `return appService.refreshToken(refreshTokenManagerService.getDataUser().refreshToken).pipe(...)` y como estamos usando un 
+`pipe(..)`, dentro de él atrapamos el error que viene en el response con el `catchError(...)` donde lo único que hacemos es `redireccionar al /login` y retornar un `EMPTY` **(EMPTY: Simplemente emite "complete" y nada más)**.
+
+**IMPORTANTE**
+
+> Es importante la validación que hacemos del número de veces que ocurre el error `401 Unauthorized` y lanzamos el error con el `return throwError(() => error)`. **¿Qué pasa si omitimos esa validación?**, pues lo que sucederá es que continuará con el flujo y lo que vien a continuación es realizar una `request` hacia el endpoint del `/refresh-token` donde se envia el `refreshToken`, pero sabemos que el `refreshToken` ha caducado, entonces cuando se haga la solicitud el servidor volverá a fallar retornando un error hasta el interceptor `errorApiInterceptor` quien atrapará el error y volverá a realizar la request del `/refresh-token` convirtiéndose en un bucle infinito.
